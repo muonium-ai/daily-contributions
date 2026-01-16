@@ -144,12 +144,14 @@ def print_repo_summary():
 
   print("\n=== Per-repo summary (author-filtered) ===")
   unknown_url_repos = []
+  repo_count = 0
   total_commits = 0
   total_additions = 0
   total_deletions = 0
   for repo in repos:
     if not os.path.isdir(os.path.join(repo, ".git")):
       continue
+    repo_count += 1
     created = get_repo_created_date(repo)
     repo_url = get_repo_url(repo)
     if not repo_url:
@@ -183,6 +185,7 @@ repo: {name}
 
   print("\n=== Totals (author-filtered) ===")
   print(
+    f"repos: {repo_count}\n"
     f"commits: {total_commits}\n"
     f"additions: {total_additions}\n"
     f"deletions: {total_deletions}\n"
@@ -196,6 +199,7 @@ repo: {name}
   else:
     print(
       f"days: {days}\n"
+      f"repos: {repo_count}\n"
       f"avg additions: {avg_add:.2f}\n"
       f"avg deletions: {avg_del:.2f}\n"
       f"avg net: {avg_net:.2f}"

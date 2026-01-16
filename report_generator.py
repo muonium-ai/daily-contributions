@@ -197,12 +197,14 @@ repo: {name}
   if days == 0:
     print("(no non-zero days found)")
   else:
+    avg_commits = total_commits / days if days else 0.0
     print(
       f"days: {days}\n"
       f"repos: {repo_count}\n"
       f"avg additions: {avg_add:.2f}\n"
       f"avg deletions: {avg_del:.2f}\n"
-      f"avg net: {avg_net:.2f}"
+      f"avg net: {avg_net:.2f}\n"
+      f"avg commits: {avg_commits:.2f}"
     )
 
 

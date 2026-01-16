@@ -77,6 +77,7 @@ def get_repo_author_stats(repo, author_regex):
 
 
 def print_daily_report():
+  print("=== Daily contributions ===")
   conn = sqlite3.connect(DB_PATH)
   cur = conn.cursor()
 
@@ -86,13 +87,13 @@ def print_daily_report():
     ORDER BY date
   """)
 
-  for date, add, delete, net in cur.fetchall():
-    print(f"""
-date: {date}
-  additions: {add}
-  deletions: {delete}
-  net: {net}
-""".strip())
+  rows = cur.fetchall()
+  if not rows:
+    print("(no daily data found)")
+  for date, add, delete, net in rows:
+    print(
+      f"{date} | +{add} / -{delete} | net {net}"
+    )
 
   conn.close()
 
@@ -102,14 +103,18 @@ def print_repo_summary():
   author_regex = get_author_regex()
 
   print("\n=== Per-repo summary (author-filtered) ===")
+  unknown_url_repos = []
   for repo in repos:
     if not os.path.isdir(os.path.join(repo, ".git")):
       continue
     created = get_repo_created_date(repo)
     repo_url = get_repo_url(repo)
+    if not repo_url:
+      unknown_url_repos.append(repo)
     commits, additions, deletions, net = get_repo_author_stats(repo, author_regex)
     name = os.path.basename(repo.rstrip(os.sep))
-    print(f"""
+    print(
+      f"""
 repo: {name}
   path: {repo}
   url: {repo_url or 'unknown'}
@@ -118,7 +123,14 @@ repo: {name}
   additions: {additions}
   deletions: {deletions}
   net: {net}
-""".strip())
+""".strip()
+    )
+
+  print("\n=== Repos with unknown URL ===")
+  if not unknown_url_repos:
+    print("(none)")
+  for repo in unknown_url_repos:
+    print(f"- {repo}")
 
 
 if __name__ == "__main__":

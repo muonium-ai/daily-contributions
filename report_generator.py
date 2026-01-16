@@ -104,6 +104,9 @@ def print_repo_summary():
 
   print("\n=== Per-repo summary (author-filtered) ===")
   unknown_url_repos = []
+  total_commits = 0
+  total_additions = 0
+  total_deletions = 0
   for repo in repos:
     if not os.path.isdir(os.path.join(repo, ".git")):
       continue
@@ -112,6 +115,12 @@ def print_repo_summary():
     if not repo_url:
       unknown_url_repos.append(repo)
     commits, additions, deletions, net = get_repo_author_stats(repo, author_regex)
+    try:
+      total_commits += int(commits)
+    except ValueError:
+      pass
+    total_additions += additions
+    total_deletions += deletions
     name = os.path.basename(repo.rstrip(os.sep))
     print(
       f"""
@@ -131,6 +140,14 @@ repo: {name}
     print("(none)")
   for repo in unknown_url_repos:
     print(f"- {repo}")
+
+  print("\n=== Totals (author-filtered) ===")
+  print(
+    f"commits: {total_commits}\n"
+    f"additions: {total_additions}\n"
+    f"deletions: {total_deletions}\n"
+    f"net: {total_additions - total_deletions}"
+  )
 
 
 if __name__ == "__main__":

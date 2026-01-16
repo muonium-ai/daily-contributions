@@ -1,12 +1,13 @@
+import re
 import subprocess
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 DB_PATH = "data/contributions.db"
-REPOS_FILE = "configrepos.txt"
+REPOS_FILE = "config/repos.txt"
 EMAILS_FILE = "config/emails.txt"
-START_DATE_FILE = "config/start_date.txt"
+START_DATE_FILE = "config/start-date.txt"
 
 
 def read_lines(path):
@@ -15,7 +16,7 @@ def read_lines(path):
 
 def get_author_regex():
     emails = read_lines(EMAILS_FILE)
-    return "|".join(emails)
+    return "|".join(re.escape(email) for email in emails)
 
 
 def get_start_date(conn):
@@ -38,6 +39,8 @@ def run_git_log(repo, day, author_regex):
         f"--since={since}",
         f"--until={until}",
         f"--author={author_regex}",
+        "--extended-regexp",
+        "--regexp-ignore-case",
         "--numstat",
         "--pretty=tformat:"
     ]
@@ -110,7 +113,7 @@ def main():
             total_add,
             total_del,
             net,
-            datetime.utcnow().isoformat()
+            datetime.now(timezone.utc).isoformat()
         ))
 
         conn.commit()

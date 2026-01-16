@@ -90,12 +90,52 @@ def print_daily_report():
   rows = cur.fetchall()
   if not rows:
     print("(no daily data found)")
+    conn.close()
+    return
+
   for date, add, delete, net in rows:
     print(
       f"{date} | +{add} / -{delete} | net {net}"
     )
 
   conn.close()
+
+
+def get_non_zero_day_averages():
+  conn = sqlite3.connect(DB_PATH)
+  cur = conn.cursor()
+
+  cur.execute("""
+    SELECT additions, deletions, net
+    FROM daily_loc
+    ORDER BY date
+  """)
+
+  rows = cur.fetchall()
+  conn.close()
+
+  if not rows:
+    return 0, 0.0, 0.0, 0.0
+
+  non_zero_days = 0
+  non_zero_add = 0
+  non_zero_del = 0
+  non_zero_net = 0
+  for add, delete, net in rows:
+    if (add + delete) > 0:
+      non_zero_days += 1
+      non_zero_add += add
+      non_zero_del += delete
+      non_zero_net += net
+
+  if non_zero_days == 0:
+    return 0, 0.0, 0.0, 0.0
+
+  avg_add = non_zero_add / non_zero_days
+  avg_del = non_zero_del / non_zero_days
+  avg_net = non_zero_net / non_zero_days
+
+  return non_zero_days, avg_add, avg_del, avg_net
 
 
 def print_repo_summary():
@@ -148,6 +188,18 @@ repo: {name}
     f"deletions: {total_deletions}\n"
     f"net: {total_additions - total_deletions}"
   )
+
+  print("\n=== Non-zero days averages ===")
+  days, avg_add, avg_del, avg_net = get_non_zero_day_averages()
+  if days == 0:
+    print("(no non-zero days found)")
+  else:
+    print(
+      f"days: {days}\n"
+      f"avg additions: {avg_add:.2f}\n"
+      f"avg deletions: {avg_del:.2f}\n"
+      f"avg net: {avg_net:.2f}"
+    )
 
 
 if __name__ == "__main__":

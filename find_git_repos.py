@@ -29,27 +29,31 @@ def is_ignored(path, ignore_paths):
     return False
 
 
-git_repos = []
-ignore_paths = read_ignore_paths(IGNORE_FILE)
+def main():
+    git_repos = []
+    ignore_paths = read_ignore_paths(IGNORE_FILE)
 
-for root, dirs, files in os.walk(ROOT_DIR):
-    has_git = ".git" in dirs
-    dirs[:] = [d for d in dirs if not d.startswith(".")]
-    if is_ignored(root, ignore_paths):
-        dirs[:] = []
-        continue
-    if has_git:
-        if not is_ignored(root, ignore_paths):
+    for root, dirs, files in os.walk(ROOT_DIR):
+        has_git = ".git" in dirs
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        if is_ignored(root, ignore_paths):
+            dirs[:] = []
+            continue
+        if has_git:
             git_repos.append(root)
-        if ".git" in dirs:
-            dirs.remove(".git")  # prevent deep recursion
 
-with open(OUTPUT_FILE, "w") as f:
-    for repo in git_repos:
-        f.write(repo + "\n")
+    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
 
-print(f"✅ Found {len(git_repos)} git repositories")
-print(f"📄 Saved to {OUTPUT_FILE}")
+    with open(OUTPUT_FILE, "w") as f:
+        for repo in git_repos:
+            f.write(repo + "\n")
+
+    print(f"✅ Found {len(git_repos)} git repositories")
+    print(f"📄 Saved to {OUTPUT_FILE}")
+
+
+if __name__ == "__main__":
+    main()
 
 
 

@@ -3,13 +3,11 @@ import re
 import sqlite3
 import subprocess
 
-REPOS_FILE = "config/repos.txt"
-EMAILS_FILE = "config/emails.txt"
-
-DB_PATH = "data/contributions.db"
+from constants import DB_PATH, REPOS_FILE, EMAILS_FILE
 
 def read_lines(path):
-  return [l.strip() for l in open(path) if l.strip()]
+  with open(path) as f:
+    return [l.strip() for l in f if l.strip()]
 
 
 def get_author_regex():

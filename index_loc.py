@@ -1,17 +1,16 @@
+import os
 import re
 import subprocess
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-DB_PATH = "data/contributions.db"
-REPOS_FILE = "config/repos.txt"
-EMAILS_FILE = "config/emails.txt"
-START_DATE_FILE = "config/start-date.txt"
+from constants import DB_PATH, REPOS_FILE, EMAILS_FILE, START_DATE_FILE
 
 
 def read_lines(path):
-    return [l.strip() for l in open(path) if l.strip()]
+    with open(path) as f:
+        return [l.strip() for l in f if l.strip()]
 
 
 def get_author_regex():
@@ -94,6 +93,7 @@ def main():
     repos = read_lines(REPOS_FILE)
     author_regex = get_author_regex()
 
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     init_db(conn)
 

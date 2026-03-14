@@ -80,7 +80,7 @@ def print_daily_report():
   cur = conn.cursor()
 
   cur.execute("""
-    SELECT date, additions, deletions, net
+    SELECT date, additions, deletions, net, files_touched, churn
     FROM daily_loc
     ORDER BY date
   """)
@@ -91,9 +91,9 @@ def print_daily_report():
     conn.close()
     return
 
-  for date, add, delete, net in rows:
+  for date, add, delete, net, files_touched, churn in rows:
     print(
-      f"{date} | +{add} / -{delete} | net {net}"
+      f"{date} | +{add} / -{delete} | net {net} | files {files_touched} | churn {churn}"
     )
 
   conn.close()
@@ -104,7 +104,7 @@ def get_non_zero_day_averages():
   cur = conn.cursor()
 
   cur.execute("""
-    SELECT additions, deletions, net
+    SELECT additions, deletions, net, files_touched, churn
     FROM daily_loc
     ORDER BY date
   """)
@@ -113,27 +113,33 @@ def get_non_zero_day_averages():
   conn.close()
 
   if not rows:
-    return 0, 0.0, 0.0, 0.0
+    return 0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   non_zero_days = 0
   non_zero_add = 0
   non_zero_del = 0
   non_zero_net = 0
-  for add, delete, net in rows:
+  non_zero_files = 0
+  non_zero_churn = 0
+  for add, delete, net, files_touched, churn in rows:
     if (add + delete) > 0:
       non_zero_days += 1
       non_zero_add += add
       non_zero_del += delete
       non_zero_net += net
+      non_zero_files += files_touched
+      non_zero_churn += churn
 
   if non_zero_days == 0:
-    return 0, 0.0, 0.0, 0.0
+    return 0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   avg_add = non_zero_add / non_zero_days
   avg_del = non_zero_del / non_zero_days
   avg_net = non_zero_net / non_zero_days
+  avg_files = non_zero_files / non_zero_days
+  avg_churn = non_zero_churn / non_zero_days
 
-  return non_zero_days, avg_add, avg_del, avg_net
+  return non_zero_days, avg_add, avg_del, avg_net, avg_files, avg_churn
 
 
 def print_repo_summary():
@@ -191,18 +197,23 @@ repo: {name}
   )
 
   print("\n=== Non-zero days averages ===")
-  days, avg_add, avg_del, avg_net = get_non_zero_day_averages()
+  days, avg_add, avg_del, avg_net, avg_files, avg_churn = get_non_zero_day_averages()
   if days == 0:
     print("(no non-zero days found)")
   else:
     avg_commits = total_commits / days if days else 0.0
+    total_loc = total_additions + total_deletions
+    churn_ratio = avg_churn / (avg_add + avg_del) * 100 if (avg_add + avg_del) > 0 else 0.0
     print(
       f"days: {days}\n"
       f"repos: {repo_count}\n"
       f"avg additions: {avg_add:.2f}\n"
       f"avg deletions: {avg_del:.2f}\n"
       f"avg net: {avg_net:.2f}\n"
-      f"avg commits: {avg_commits:.2f}"
+      f"avg commits: {avg_commits:.2f}\n"
+      f"avg files touched: {avg_files:.2f}\n"
+      f"avg churn: {avg_churn:.2f}\n"
+      f"churn ratio: {churn_ratio:.1f}%"
     )
 
 

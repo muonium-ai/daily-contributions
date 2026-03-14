@@ -53,21 +53,23 @@ def run_git_log(repo, day, author_regex):
             check=True
         )
     except subprocess.CalledProcessError:
-        return 0, 0, 0
+        return 0, 0, 0, 0
 
     add, delete, commits = 0, 0, 0
+    files = set()
     for line in result.stdout.splitlines():
         parts = line.split("\t")
-        if len(parts) >= 2:
+        if len(parts) >= 3:
             try:
                 add += int(parts[0])
                 delete += int(parts[1])
             except ValueError:
                 pass
+            files.add(parts[2])
         elif line:
             commits += 1
 
-    return add, delete, commits
+    return add, delete, commits, len(files)
 
 
 def init_db(conn):
@@ -86,6 +88,10 @@ def init_db(conn):
     columns = {row[1] for row in cur.fetchall()}
     if "commits" not in columns:
         conn.execute("ALTER TABLE daily_loc ADD COLUMN commits INTEGER NOT NULL DEFAULT 0")
+    if "files_touched" not in columns:
+        conn.execute("ALTER TABLE daily_loc ADD COLUMN files_touched INTEGER NOT NULL DEFAULT 0")
+    if "churn" not in columns:
+        conn.execute("ALTER TABLE daily_loc ADD COLUMN churn INTEGER NOT NULL DEFAULT 0")
     conn.commit()
 
 
@@ -103,31 +109,35 @@ def main():
     current = start
     while current.date() <= today:
         day = current.strftime("%Y-%m-%d")
-        total_add, total_del, total_commits = 0, 0, 0
+        total_add, total_del, total_commits, total_files = 0, 0, 0, 0
 
         for repo in repos:
-            a, d, c = run_git_log(repo, day, author_regex)
+            a, d, c, f = run_git_log(repo, day, author_regex)
             total_add += a
             total_del += d
             total_commits += c
+            total_files += f
 
         net = total_add - total_del
+        churn = min(total_add, total_del)
 
         conn.execute("""
             INSERT OR REPLACE INTO daily_loc
-            (date, additions, deletions, commits, net, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (date, additions, deletions, commits, net, files_touched, churn, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             day,
             total_add,
             total_del,
             total_commits,
             net,
+            total_files,
+            churn,
             datetime.now(timezone.utc).isoformat()
         ))
 
         conn.commit()
-        print(f"{day} → +{total_add} / -{total_del} | commits {total_commits}")
+        print(f"{day} → +{total_add} / -{total_del} | commits {total_commits} | files {total_files} | churn {churn}")
 
         current += timedelta(days=1)
 

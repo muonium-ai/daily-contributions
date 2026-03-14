@@ -72,6 +72,13 @@ def run_git_log(repo, day, author_regex):
     return add, delete, commits, len(files)
 
 
+def _run_cmd(cmd, cwd=None):
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
 def init_db(conn):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS daily_loc (
@@ -80,6 +87,16 @@ def init_db(conn):
             deletions INTEGER NOT NULL,
             commits INTEGER NOT NULL,
             net INTEGER NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS repos (
+            name TEXT PRIMARY KEY,
+            path TEXT NOT NULL,
+            url TEXT,
+            created_date TEXT,
+            last_commit_date TEXT,
             updated_at TEXT NOT NULL
         )
     """)
@@ -92,6 +109,10 @@ def init_db(conn):
         conn.execute("ALTER TABLE daily_loc ADD COLUMN files_touched INTEGER NOT NULL DEFAULT 0")
     if "churn" not in columns:
         conn.execute("ALTER TABLE daily_loc ADD COLUMN churn INTEGER NOT NULL DEFAULT 0")
+    cur.execute("PRAGMA table_info(repos)")
+    repo_columns = {row[1] for row in cur.fetchall()}
+    if "last_commit_date" not in repo_columns:
+        conn.execute("ALTER TABLE repos ADD COLUMN last_commit_date TEXT")
     conn.commit()
 
 
@@ -140,6 +161,27 @@ def main():
         print(f"{day} → +{total_add} / -{total_del} | commits {total_commits} | files {total_files} | churn {churn}")
 
         current += timedelta(days=1)
+
+    print("\nIndexing repo metadata...")
+    for repo in repos:
+        if not os.path.isdir(os.path.join(repo, ".git")):
+            continue
+        name = os.path.basename(repo.rstrip(os.sep))
+        url = _run_cmd(["git", "config", "--get", "remote.origin.url"], cwd=repo)
+        created = _run_cmd(
+            ["git", "log", "--reverse", "-n", "1", "--pretty=format:%aI"],
+            cwd=repo,
+        )
+        last_commit = _run_cmd(
+            ["git", "log", "-n", "1", "--pretty=format:%aI"],
+            cwd=repo,
+        )
+        conn.execute("""
+            INSERT OR REPLACE INTO repos (name, path, url, created_date, last_commit_date, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (name, repo, url or None, created or None, last_commit or None, datetime.now(timezone.utc).isoformat()))
+    conn.commit()
+    print("Done.")
 
     conn.close()
 

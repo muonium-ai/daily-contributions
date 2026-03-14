@@ -3,6 +3,8 @@ import re
 import sqlite3
 import subprocess
 
+from datetime import date
+
 from constants import DB_PATH, REPOS_FILE, EMAILS_FILE
 
 def read_lines(path):
@@ -217,6 +219,71 @@ repo: {name}
     )
 
 
+def classify_activity(last_commit_date):
+  if not last_commit_date:
+    return "dormant"
+  last = date.fromisoformat(last_commit_date[:10])
+  days = (date.today() - last).days
+  if days <= 7:
+    return "active"
+  elif days <= 30:
+    return "stale"
+  elif days <= 90:
+    return "inactive"
+  else:
+    return "dormant"
+
+
+def print_module_timeline():
+  conn = sqlite3.connect(DB_PATH)
+  cur = conn.cursor()
+
+  cur.execute("""
+    SELECT name, url, created_date, last_commit_date
+    FROM repos
+    WHERE created_date IS NOT NULL
+    ORDER BY created_date
+  """)
+  rows = cur.fetchall()
+  conn.close()
+
+  if not rows:
+    print("\n=== Module Growth Timeline ===")
+    print("(no repo metadata found \u2014 run index first)")
+    return
+
+  print("\n=== Module Growth Timeline ===")
+  status_counts = {"active": 0, "stale": 0, "inactive": 0, "dormant": 0}
+  for name, url, created, last_commit in rows:
+    date_part = created[:10] if created else "unknown"
+    status = classify_activity(last_commit)
+    status_counts[status] += 1
+    print(f"{date_part}  {name:<30} {url or 'unknown':<55} [{status}]")
+
+  print("\n=== Cumulative Module Count ===")
+  monthly = {}
+  for _, _, created, _ in rows:
+    if created:
+      month = created[:7]
+      monthly[month] = monthly.get(month, 0) + 1
+
+  cumulative = 0
+  for month in sorted(monthly):
+    cumulative += monthly[month]
+    print(f"{month}: {cumulative} modules")
+
+  total = sum(status_counts.values())
+  print("\n=== Repo Activity Summary ===")
+  print(
+    f"active (\u22647 days):     {status_counts['active']}\n"
+    f"stale (8-30 days):    {status_counts['stale']}\n"
+    f"inactive (31-90 days): {status_counts['inactive']}\n"
+    f"dormant (>90 days):   {status_counts['dormant']}\n"
+    f"total: {total}"
+  )
+
+
 if __name__ == "__main__":
   print_daily_report()
   print_repo_summary()
+  print_module_timeline()

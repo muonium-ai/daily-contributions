@@ -332,8 +332,62 @@ def print_tickets_summary():
   )
 
 
+def get_unarchived_tickets(repo_path):
+  tickets_dir = os.path.join(repo_path, "tickets")
+  if not os.path.isdir(tickets_dir):
+    return []
+  results = []
+  for filepath in sorted(glob.glob(os.path.join(tickets_dir, "T-*.md"))):
+    ticket_id = os.path.splitext(os.path.basename(filepath))[0]
+    title = ""
+    st = ""
+    with open(filepath) as f:
+      for line in f:
+        line = line.strip()
+        if line.startswith("title:"):
+          title = line[6:].strip().strip("'\"")
+        elif line.startswith("status:"):
+          st = line[7:].strip()
+        if title and st:
+          break
+    results.append((ticket_id, st, title))
+  return results
+
+
+def print_unarchived_tickets():
+  repos = read_lines(REPOS_FILE)
+
+  print("\n=== Unarchived Tickets ===")
+  all_tickets = []
+  for repo in repos:
+    if not os.path.isdir(os.path.join(repo, ".git")):
+      continue
+    name = os.path.basename(repo.rstrip(os.sep))
+    tickets = get_unarchived_tickets(repo)
+    for ticket_id, st, title in tickets:
+      all_tickets.append((name, ticket_id, st, title))
+
+  if not all_tickets:
+    print("(none)")
+    return
+
+  max_repo = max(len(t[0]) for t in all_tickets)
+  max_tid = max(len(t[1]) for t in all_tickets)
+  max_st = max(len(t[2]) for t in all_tickets)
+
+  header = f"{'Repo':<{max_repo}}  {'Ticket':<{max_tid}}  {'Status':<{max_st}}  Title"
+  print(header)
+  print("-" * len(header.rstrip()) + "---")
+
+  for name, ticket_id, st, title in all_tickets:
+    print(f"{name:<{max_repo}}  {ticket_id:<{max_tid}}  {st:<{max_st}}  {title}")
+
+  print(f"\ntotal unarchived: {len(all_tickets)}")
+
+
 if __name__ == "__main__":
   print_daily_report()
   print_repo_summary()
   print_module_timeline()
   print_tickets_summary()
+  print_unarchived_tickets()

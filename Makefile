@@ -6,9 +6,14 @@ REPORT_FILE := reports/$(DATE).txt
 all: report
 
 repos:
-	uv run find_git_repos.py
+	uv run find_git_repos.py $(ROOT_DIR)
 
-index: repos
+index:
+	@if [ ! -f config/repos.txt ]; then \
+		echo "Error: config/repos.txt not found."; \
+		echo "Run: uv run find_git_repos.py <folder>"; \
+		exit 1; \
+	fi
 	uv run index_loc.py
 
 report: index

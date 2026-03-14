@@ -1,3 +1,4 @@
 config/
 reports/
 data/
+__pycache__/

@@ -1,10 +1,10 @@
 import os
+import sys
 
-ROOT_DIR = os.path.expanduser("~/code/")   # ← CHANGE THIS
 OUTPUT_FILE = "config/repos.txt"
 IGNORE_FILE = "config/ignore_repos.txt"
 
-def read_ignore_paths(path):
+def read_ignore_paths(path, root_dir):
     if not os.path.exists(path):
         return []
     ignores = []
@@ -16,7 +16,7 @@ def read_ignore_paths(path):
             if os.path.isabs(line) or line.startswith("~"):
                 resolved = os.path.realpath(os.path.expanduser(line))
             else:
-                resolved = os.path.realpath(os.path.join(ROOT_DIR, line))
+                resolved = os.path.realpath(os.path.join(root_dir, line))
             ignores.append(resolved)
     return ignores
 
@@ -30,10 +30,19 @@ def is_ignored(path, ignore_paths):
 
 
 def main():
-    git_repos = []
-    ignore_paths = read_ignore_paths(IGNORE_FILE)
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <folder>")
+        sys.exit(1)
 
-    for root, dirs, files in os.walk(ROOT_DIR):
+    root_dir = os.path.expanduser(sys.argv[1])
+    if not os.path.isdir(root_dir):
+        print(f"Error: '{root_dir}' is not a directory")
+        sys.exit(1)
+
+    git_repos = []
+    ignore_paths = read_ignore_paths(IGNORE_FILE, root_dir)
+
+    for root, dirs, files in os.walk(root_dir):
         has_git = ".git" in dirs
         dirs[:] = [d for d in dirs if not d.startswith(".")]
         if is_ignored(root, ignore_paths):

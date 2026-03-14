@@ -325,10 +325,13 @@ def print_tickets_summary():
     else:
       print(f"{name:<30} {done} done / {total} total")
 
+  pct = (grand_done / grand_total * 100) if grand_total else 0.0
   print(
-    f"\nrepos using MuonTickets: {len(mt_repos)}\n"
+    f"\n=== Ticket Completion ===\n"
+    f"repos using MuonTickets: {len(mt_repos)}\n"
     f"total tickets implemented: {grand_done}\n"
-    f"total tickets: {grand_total}"
+    f"total tickets: {grand_total}\n"
+    f"completion: {pct:.1f}%"
   )
 
 

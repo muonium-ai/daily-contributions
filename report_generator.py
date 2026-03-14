@@ -1,6 +1,7 @@
 import os
 import re
 import sqlite3
+import glob
 import subprocess
 
 from datetime import date
@@ -283,7 +284,56 @@ def print_module_timeline():
   )
 
 
+def get_ticket_counts(repo_path):
+  tickets_dir = os.path.join(repo_path, "tickets")
+  if not os.path.isdir(tickets_dir):
+    return None
+  archive_dir = os.path.join(tickets_dir, "archive")
+  done = len(glob.glob(os.path.join(archive_dir, "T-*.md"))) if os.path.isdir(archive_dir) else 0
+  open_tickets = len(glob.glob(os.path.join(tickets_dir, "T-*.md")))
+  total = done + open_tickets
+  return done, total
+
+
+def print_tickets_summary():
+  repos = read_lines(REPOS_FILE)
+
+  print("\n=== MuonTickets Summary ===")
+  mt_repos = []
+  grand_done = 0
+  grand_total = 0
+
+  for repo in repos:
+    if not os.path.isdir(os.path.join(repo, ".git")):
+      continue
+    name = os.path.basename(repo.rstrip(os.sep))
+    counts = get_ticket_counts(repo)
+    if counts is None:
+      continue
+    done, total = counts
+    mt_repos.append((name, done, total))
+    grand_done += done
+    grand_total += total
+
+  if not mt_repos:
+    print("(no repos using MuonTickets)")
+    return
+
+  for name, done, total in mt_repos:
+    if total == 0:
+      print(f"{name:<30} no tickets")
+    else:
+      print(f"{name:<30} {done} done / {total} total")
+
+  print(
+    f"\nrepos using MuonTickets: {len(mt_repos)}\n"
+    f"total tickets implemented: {grand_done}\n"
+    f"total tickets: {grand_total}"
+  )
+
+
 if __name__ == "__main__":
   print_daily_report()
   print_repo_summary()
   print_module_timeline()
+  print_tickets_summary()

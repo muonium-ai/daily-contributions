@@ -21,7 +21,7 @@ index:
 
 report: index
 	@mkdir -p reports
-	uv run report_generator.py | tee $(REPORT_FILE)
+	uv run tools/report.py | tee $(REPORT_FILE)
 
 test:
 	uv run pytest tests/

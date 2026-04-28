@@ -2,8 +2,7 @@ from datetime import date
 
 import pytest
 
-import report_generator
-from report_generator import classify_activity
+from daily_contributions.report import classify_activity
 
 
 class _FakeDate(date):
@@ -18,7 +17,7 @@ class _FakeDate(date):
 
 @pytest.fixture(autouse=True)
 def pin_today(monkeypatch):
-    monkeypatch.setattr(report_generator, "date", _FakeDate)
+    monkeypatch.setattr("daily_contributions.report.date", _FakeDate)
 
 
 def test_none_last_commit():

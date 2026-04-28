@@ -394,9 +394,13 @@ def print_unarchived_tickets():
   print(f"\ntotal unarchived: {len(all_tickets)}")
 
 
-if __name__ == "__main__":
+def main():
   print_daily_report()
   print_repo_summary()
   print_module_timeline()
   print_tickets_summary()
   print_unarchived_tickets()
+
+
+if __name__ == "__main__":
+  main()

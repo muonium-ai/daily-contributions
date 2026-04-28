@@ -1,6 +1,6 @@
 import os
 
-from report_generator import get_unarchived_tickets
+from daily_contributions.report import get_unarchived_tickets
 
 
 def _write_ticket(tmp_path, ticket_id, content):

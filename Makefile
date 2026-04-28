@@ -1,4 +1,4 @@
-.PHONY: all repos index report clean backup
+.PHONY: all repos index report test clean backup
 
 SHELL := bash
 .SHELLFLAGS := -eo pipefail -c
@@ -22,6 +22,9 @@ index:
 report: index
 	@mkdir -p reports
 	uv run report_generator.py | tee $(REPORT_FILE)
+
+test:
+	uv run pytest tests/
 
 clean:
 	@rm -f data/contributions.db

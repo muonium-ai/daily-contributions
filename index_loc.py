@@ -30,6 +30,24 @@ def get_start_date(conn):
     return datetime.fromisoformat(read_lines(START_DATE_FILE)[0])
 
 
+def parse_numstat(stdout):
+    add, delete, commits = 0, 0, 0
+    files = set()
+    for line in stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 3:
+            try:
+                add += int(parts[0])
+                delete += int(parts[1])
+            except ValueError:
+                pass
+            files.add(parts[2])
+        elif line:
+            commits += 1
+
+    return add, delete, commits, len(files)
+
+
 def run_git_log(repo, day, author_regex):
     since = f"{day} 00:00:00"
     until = f"{day} 23:59:59"
@@ -56,21 +74,7 @@ def run_git_log(repo, day, author_regex):
     except subprocess.CalledProcessError:
         return 0, 0, 0, 0
 
-    add, delete, commits = 0, 0, 0
-    files = set()
-    for line in result.stdout.splitlines():
-        parts = line.split("\t")
-        if len(parts) >= 3:
-            try:
-                add += int(parts[0])
-                delete += int(parts[1])
-            except ValueError:
-                pass
-            files.add(parts[2])
-        elif line:
-            commits += 1
-
-    return add, delete, commits, len(files)
+    return parse_numstat(result.stdout)
 
 
 def init_db(conn):

@@ -14,7 +14,7 @@ repos:
 index:
 	@if [ ! -f config/repos.txt ]; then \
 		echo "Error: config/repos.txt not found."; \
-		echo "Run: uv run find_git_repos.py <folder>"; \
+		echo "Run: uv run tools/find_repos.py <folder>"; \
 		exit 1; \
 	fi
 	uv run tools/index.py

@@ -12,7 +12,7 @@ echo "you@example.com" > config/emails.txt
 echo "2025-01-01" > config/start-date.txt
 
 # 3. Discover git repos under a folder
-uv run find_git_repos.py ~/code
+uv run tools/find_repos.py ~/code
 ```
 
 ## Usage
@@ -50,11 +50,19 @@ The report is saved to `reports/YYYY-MM-DD.txt`.
 ## Project structure
 
 ```
-find_git_repos.py      # Walk a directory tree to discover git repos
-index_loc.py           # Index daily LOC and repo metadata into SQLite
-report_generator.py    # Generate the full text report from the database
-constants.py           # Shared config file paths
+src/daily_contributions/
+  constants.py         # Shared config file paths
+  git_utils.py         # Git command wrappers
+  discovery.py         # Walk a directory tree to discover git repos
+  indexer.py           # Index daily LOC and repo metadata into SQLite
+  report.py            # Generate the full text report from the database
+tools/
+  find_repos.py        # CLI: discover git repos
+  index.py             # CLI: index LOC into SQLite
+  report.py            # CLI: print the report
+tests/                 # Unit tests for parsers and classifiers
 Makefile               # Build pipeline
+pyproject.toml         # Hatchling-built editable package
 config/                # emails.txt, repos.txt, start-date.txt
 data/                  # contributions.db (SQLite)
 reports/               # Generated daily reports

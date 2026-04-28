@@ -17,7 +17,7 @@ index:
 		echo "Run: uv run find_git_repos.py <folder>"; \
 		exit 1; \
 	fi
-	uv run index_loc.py
+	uv run tools/index.py
 
 report: index
 	@mkdir -p reports

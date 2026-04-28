@@ -1,4 +1,4 @@
-from index_loc import parse_numstat
+from daily_contributions.indexer import parse_numstat
 
 
 def test_text_only_commit():

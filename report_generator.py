@@ -7,7 +7,7 @@ import subprocess
 from datetime import date
 
 from constants import DB_PATH, REPOS_FILE, EMAILS_FILE
-from git_utils import run_cmd, get_repo_url, get_repo_created_date
+from git_utils import run_cmd
 
 def read_lines(path):
   with open(path) as f:
@@ -131,9 +131,19 @@ def get_non_zero_day_averages():
   return non_zero_days, avg_add, avg_del, avg_net, avg_files, avg_churn, avg_commits
 
 
+def get_repos_metadata():
+  conn = sqlite3.connect(DB_PATH)
+  cur = conn.cursor()
+  cur.execute("SELECT path, url, created_date FROM repos")
+  rows = cur.fetchall()
+  conn.close()
+  return {path: (url, created) for path, url, created in rows}
+
+
 def print_repo_summary():
   repos = read_lines(REPOS_FILE)
   author_regex = get_author_regex()
+  metadata = get_repos_metadata()
 
   print("\n=== Per-repo summary (author-filtered) ===")
   unknown_url_repos = []
@@ -145,8 +155,7 @@ def print_repo_summary():
     if not os.path.isdir(os.path.join(repo, ".git")):
       continue
     repo_count += 1
-    created = get_repo_created_date(repo)
-    repo_url = get_repo_url(repo)
+    repo_url, created = metadata.get(repo, (None, None))
     if not repo_url:
       unknown_url_repos.append(repo)
     commits, additions, deletions, net = get_repo_author_stats(repo, author_regex)

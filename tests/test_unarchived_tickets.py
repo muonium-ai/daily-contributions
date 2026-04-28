@@ -15,13 +15,7 @@ def test_well_formed_frontmatter(tmp_path):
     _write_ticket(
         tmp_path,
         "T-000001",
-        "---\n"
-        "id: T-000001\n"
-        "title: \"Add tests\"\n"
-        "status: ready\n"
-        "---\n"
-        "\n"
-        "## Body\n",
+        '---\nid: T-000001\ntitle: "Add tests"\nstatus: ready\n---\n\n## Body\n',
     )
     results = get_unarchived_tickets(str(tmp_path))
     assert results == [("T-000001", "ready", "Add tests")]
@@ -31,12 +25,7 @@ def test_missing_title(tmp_path):
     _write_ticket(
         tmp_path,
         "T-000002",
-        "---\n"
-        "id: T-000002\n"
-        "status: ready\n"
-        "---\n"
-        "\n"
-        "## Body\n",
+        "---\nid: T-000002\nstatus: ready\n---\n\n## Body\n",
     )
     results = get_unarchived_tickets(str(tmp_path))
     assert results == [("T-000002", "ready", "")]
@@ -46,12 +35,7 @@ def test_missing_status(tmp_path):
     _write_ticket(
         tmp_path,
         "T-000003",
-        "---\n"
-        "id: T-000003\n"
-        "title: \"Some title\"\n"
-        "---\n"
-        "\n"
-        "## Body\n",
+        '---\nid: T-000003\ntitle: "Some title"\n---\n\n## Body\n',
     )
     results = get_unarchived_tickets(str(tmp_path))
     assert results == [("T-000003", "", "Some title")]
@@ -64,7 +48,7 @@ def test_body_line_mimicking_frontmatter_keys(tmp_path):
         "T-000004",
         "---\n"
         "id: T-000004\n"
-        "title: \"Real title\"\n"
+        'title: "Real title"\n'
         "status: ready\n"
         "---\n"
         "\n"
@@ -82,13 +66,7 @@ def test_body_line_mimicking_keys_with_no_frontmatter_keys(tmp_path):
     _write_ticket(
         tmp_path,
         "T-000005",
-        "---\n"
-        "id: T-000005\n"
-        "---\n"
-        "\n"
-        "## Body\n"
-        "title: decoy\n"
-        "status: decoy\n",
+        "---\nid: T-000005\n---\n\n## Body\ntitle: decoy\nstatus: decoy\n",
     )
     results = get_unarchived_tickets(str(tmp_path))
     assert results == [("T-000005", "", "")]
@@ -99,9 +77,7 @@ def test_no_frontmatter_at_all(tmp_path):
     _write_ticket(
         tmp_path,
         "T-000006",
-        "## Body only\n"
-        "title: decoy\n"
-        "status: decoy\n",
+        "## Body only\ntitle: decoy\nstatus: decoy\n",
     )
     results = get_unarchived_tickets(str(tmp_path))
     assert results == [("T-000006", "", "")]

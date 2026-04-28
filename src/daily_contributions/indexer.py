@@ -5,8 +5,17 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from daily_contributions.constants import DB_PATH, REPOS_FILE, EMAILS_FILE, START_DATE_FILE
-from daily_contributions.git_utils import get_repo_url, get_repo_created_date, get_repo_last_commit_date
+from daily_contributions.constants import (
+    DB_PATH,
+    REPOS_FILE,
+    EMAILS_FILE,
+    START_DATE_FILE,
+)
+from daily_contributions.git_utils import (
+    get_repo_url,
+    get_repo_created_date,
+    get_repo_last_commit_date,
+)
 
 
 def read_lines(path):
@@ -53,23 +62,20 @@ def run_git_log(repo, day, author_regex):
     until = f"{day} 23:59:59"
 
     cmd = [
-        "git", "log",
+        "git",
+        "log",
         f"--since={since}",
         f"--until={until}",
         f"--author={author_regex}",
         "--extended-regexp",
         "--regexp-ignore-case",
         "--numstat",
-        "--pretty=format:%H"
+        "--pretty=format:%H",
     ]
 
     try:
         result = subprocess.run(
-            cmd,
-            cwd=repo,
-            capture_output=True,
-            text=True,
-            check=True
+            cmd, cwd=repo, capture_output=True, text=True, check=True
         )
     except subprocess.CalledProcessError:
         return 0, 0, 0, 0
@@ -102,11 +108,17 @@ def init_db(conn):
     cur.execute("PRAGMA table_info(daily_loc)")
     columns = {row[1] for row in cur.fetchall()}
     if "commits" not in columns:
-        conn.execute("ALTER TABLE daily_loc ADD COLUMN commits INTEGER NOT NULL DEFAULT 0")
+        conn.execute(
+            "ALTER TABLE daily_loc ADD COLUMN commits INTEGER NOT NULL DEFAULT 0"
+        )
     if "files_touched" not in columns:
-        conn.execute("ALTER TABLE daily_loc ADD COLUMN files_touched INTEGER NOT NULL DEFAULT 0")
+        conn.execute(
+            "ALTER TABLE daily_loc ADD COLUMN files_touched INTEGER NOT NULL DEFAULT 0"
+        )
     if "churn" not in columns:
-        conn.execute("ALTER TABLE daily_loc ADD COLUMN churn INTEGER NOT NULL DEFAULT 0")
+        conn.execute(
+            "ALTER TABLE daily_loc ADD COLUMN churn INTEGER NOT NULL DEFAULT 0"
+        )
     cur.execute("PRAGMA table_info(repos)")
     repo_columns = {row[1] for row in cur.fetchall()}
     if "last_commit_date" not in repo_columns:
@@ -140,23 +152,28 @@ def main():
         net = total_add - total_del
         churn = min(total_add, total_del)
 
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR REPLACE INTO daily_loc
             (date, additions, deletions, commits, net, files_touched, churn, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            day,
-            total_add,
-            total_del,
-            total_commits,
-            net,
-            total_files,
-            churn,
-            datetime.now(timezone.utc).isoformat()
-        ))
+        """,
+            (
+                day,
+                total_add,
+                total_del,
+                total_commits,
+                net,
+                total_files,
+                churn,
+                datetime.now(timezone.utc).isoformat(),
+            ),
+        )
 
         conn.commit()
-        print(f"{day} → +{total_add} / -{total_del} | commits {total_commits} | files {total_files} | churn {churn}")
+        print(
+            f"{day} → +{total_add} / -{total_del} | commits {total_commits} | files {total_files} | churn {churn}"
+        )
 
         current += timedelta(days=1)
 
@@ -168,10 +185,20 @@ def main():
         url = get_repo_url(repo)
         created = get_repo_created_date(repo)
         last_commit = get_repo_last_commit_date(repo)
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR REPLACE INTO repos (name, path, url, created_date, last_commit_date, updated_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (name, repo, url or None, created or None, last_commit or None, datetime.now(timezone.utc).isoformat()))
+        """,
+            (
+                name,
+                repo,
+                url or None,
+                created or None,
+                last_commit or None,
+                datetime.now(timezone.utc).isoformat(),
+            ),
+        )
     conn.commit()
     print("Done.")
 

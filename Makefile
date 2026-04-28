@@ -1,4 +1,4 @@
-.PHONY: all repos index report test clean backup
+.PHONY: all repos index report test format clean backup
 
 SHELL := bash
 .SHELLFLAGS := -eo pipefail -c
@@ -25,6 +25,9 @@ report: index
 
 test:
 	uv run pytest tests/
+
+format:
+	uv run ruff format .
 
 clean:
 	@rm -f data/contributions.db

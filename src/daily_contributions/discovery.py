@@ -4,6 +4,7 @@ import sys
 OUTPUT_FILE = "config/repos.txt"
 IGNORE_FILE = "config/ignore_repos.txt"
 
+
 def read_ignore_paths(path, root_dir):
     if not os.path.exists(path):
         return []
@@ -63,6 +64,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

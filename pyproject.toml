@@ -16,4 +16,11 @@ packages = ["src/daily_contributions"]
 [dependency-groups]
 dev = [
   "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[tool.ruff]
+target-version = "py313"
+extend-exclude = [
+    "tickets/mt/muontickets",
 ]

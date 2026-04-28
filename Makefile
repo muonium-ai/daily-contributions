@@ -9,7 +9,7 @@ REPORT_FILE := reports/$(DATE).txt
 all: report
 
 repos:
-	uv run find_git_repos.py $(ROOT_DIR)
+	uv run tools/find_repos.py $(ROOT_DIR)
 
 index:
 	@if [ ! -f config/repos.txt ]; then \

@@ -1,10 +1,17 @@
 [project]
 name = "daily-contributions"
 version = "0.1.0"
-description = "Add your description here"
+description = "Track daily code contributions across all your git repos"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[build-system]
+requires = ["hatchling>=1.24.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daily_contributions"]
 
 [dependency-groups]
 dev = [

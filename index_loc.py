@@ -24,7 +24,7 @@ def get_start_date(conn):
     row = cur.fetchone()
 
     if row[0]:
-        return datetime.fromisoformat(row[0]) + timedelta(days=1)
+        return datetime.fromisoformat(row[0])
 
     return datetime.fromisoformat(read_lines(START_DATE_FILE)[0])
 

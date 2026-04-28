@@ -32,6 +32,18 @@ make backup                  # snapshot the database
 
 The report is saved to `reports/YYYY-MM-DD.txt`.
 
+## Cleanup utilities
+
+```bash
+make node-modules ROOT_DIR=~/code      # report node_modules folders + sizes
+make image-sequences ROOT_DIR=~/code   # detect image-sequence folders
+make worktrees ROOT_DIR=~/code/repo    # classify git worktrees (dry-run)
+```
+
+`make worktrees` is dry-run by default and only prints what it would do.
+Pass `--apply` (via the underlying `uv run tools/clean_worktrees.py ... --apply`)
+to actually remove worktrees.
+
 ## What the report includes
 
 | Section | Description |

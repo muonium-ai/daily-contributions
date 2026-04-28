@@ -1,4 +1,4 @@
-.PHONY: all repos index report test format clean backup
+.PHONY: all repos index report test format clean backup node-modules image-sequences worktrees
 
 SHELL := bash
 .SHELLFLAGS := -eo pipefail -c
@@ -35,3 +35,12 @@ clean:
 backup:
 	@mkdir -p data/backup
 	@cp data/contributions.db data/backup/contributions-$(DATE).db
+
+node-modules:
+	uv run tools/find_node_modules.py $(ROOT_DIR)
+
+image-sequences:
+	uv run tools/image_sequence_detection.py $(ROOT_DIR)
+
+worktrees:
+	uv run tools/clean_worktrees.py $(ROOT_DIR)

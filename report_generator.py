@@ -107,7 +107,7 @@ def get_non_zero_day_averages():
   cur = conn.cursor()
 
   cur.execute("""
-    SELECT additions, deletions, net, files_touched, churn
+    SELECT additions, deletions, net, files_touched, churn, commits
     FROM daily_loc
     ORDER BY date
   """)
@@ -116,7 +116,7 @@ def get_non_zero_day_averages():
   conn.close()
 
   if not rows:
-    return 0, 0.0, 0.0, 0.0, 0.0, 0.0
+    return 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   non_zero_days = 0
   non_zero_add = 0
@@ -124,7 +124,8 @@ def get_non_zero_day_averages():
   non_zero_net = 0
   non_zero_files = 0
   non_zero_churn = 0
-  for add, delete, net, files_touched, churn in rows:
+  non_zero_commits = 0
+  for add, delete, net, files_touched, churn, commits in rows:
     if (add + delete) > 0:
       non_zero_days += 1
       non_zero_add += add
@@ -132,17 +133,19 @@ def get_non_zero_day_averages():
       non_zero_net += net
       non_zero_files += files_touched
       non_zero_churn += churn
+      non_zero_commits += commits
 
   if non_zero_days == 0:
-    return 0, 0.0, 0.0, 0.0, 0.0, 0.0
+    return 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   avg_add = non_zero_add / non_zero_days
   avg_del = non_zero_del / non_zero_days
   avg_net = non_zero_net / non_zero_days
   avg_files = non_zero_files / non_zero_days
   avg_churn = non_zero_churn / non_zero_days
+  avg_commits = non_zero_commits / non_zero_days
 
-  return non_zero_days, avg_add, avg_del, avg_net, avg_files, avg_churn
+  return non_zero_days, avg_add, avg_del, avg_net, avg_files, avg_churn, avg_commits
 
 
 def print_repo_summary():
@@ -200,11 +203,10 @@ repo: {name}
   )
 
   print("\n=== Non-zero days averages ===")
-  days, avg_add, avg_del, avg_net, avg_files, avg_churn = get_non_zero_day_averages()
+  days, avg_add, avg_del, avg_net, avg_files, avg_churn, avg_commits = get_non_zero_day_averages()
   if days == 0:
     print("(no non-zero days found)")
   else:
-    avg_commits = total_commits / days if days else 0.0
     total_loc = total_additions + total_deletions
     churn_ratio = avg_churn / (avg_add + avg_del) * 100 if (avg_add + avg_del) > 0 else 0.0
     print(

@@ -346,13 +346,25 @@ def get_unarchived_tickets(repo_path):
     ticket_id = os.path.splitext(os.path.basename(filepath))[0]
     title = ""
     st = ""
+    in_frontmatter = False
+    seen_frontmatter = False
     with open(filepath) as f:
       for line in f:
-        line = line.strip()
-        if line.startswith("title:"):
-          title = line[6:].strip().strip("'\"")
-        elif line.startswith("status:"):
-          st = line[7:].strip()
+        stripped = line.strip()
+        if stripped == "---":
+          if not seen_frontmatter:
+            in_frontmatter = True
+            seen_frontmatter = True
+          elif in_frontmatter:
+            in_frontmatter = False
+            break
+          continue
+        if not in_frontmatter:
+          continue
+        if stripped.startswith("title:"):
+          title = stripped[6:].strip().strip("'\"")
+        elif stripped.startswith("status:"):
+          st = stripped[7:].strip()
         if title and st:
           break
     results.append((ticket_id, st, title))

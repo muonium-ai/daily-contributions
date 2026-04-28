@@ -5,8 +5,8 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from constants import DB_PATH, REPOS_FILE, EMAILS_FILE, START_DATE_FILE
-from git_utils import get_repo_url, get_repo_created_date, get_repo_last_commit_date
+from daily_contributions.constants import DB_PATH, REPOS_FILE, EMAILS_FILE, START_DATE_FILE
+from daily_contributions.git_utils import get_repo_url, get_repo_created_date, get_repo_last_commit_date
 
 
 def read_lines(path):

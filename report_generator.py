@@ -6,8 +6,8 @@ import subprocess
 
 from datetime import date
 
-from constants import DB_PATH, REPOS_FILE, EMAILS_FILE
-from git_utils import run_cmd
+from daily_contributions.constants import DB_PATH, REPOS_FILE, EMAILS_FILE
+from daily_contributions.git_utils import run_cmd
 
 def read_lines(path):
   with open(path) as f:

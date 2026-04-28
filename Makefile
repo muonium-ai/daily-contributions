@@ -1,5 +1,8 @@
 .PHONY: all repos index report clean backup
 
+SHELL := bash
+.SHELLFLAGS := -eo pipefail -c
+
 DATE := $(shell date +%Y-%m-%d)
 REPORT_FILE := reports/$(DATE).txt
 

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from constants import DB_PATH, REPOS_FILE, EMAILS_FILE, START_DATE_FILE
+from git_utils import get_repo_url, get_repo_created_date, get_repo_last_commit_date
 
 
 def read_lines(path):
@@ -70,13 +71,6 @@ def run_git_log(repo, day, author_regex):
             commits += 1
 
     return add, delete, commits, len(files)
-
-
-def _run_cmd(cmd, cwd=None):
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-    if result.returncode != 0:
-        return ""
-    return result.stdout.strip()
 
 
 def init_db(conn):
@@ -167,15 +161,9 @@ def main():
         if not os.path.isdir(os.path.join(repo, ".git")):
             continue
         name = os.path.basename(repo.rstrip(os.sep))
-        url = _run_cmd(["git", "config", "--get", "remote.origin.url"], cwd=repo)
-        created = _run_cmd(
-            ["git", "log", "--reverse", "-n", "1", "--pretty=format:%aI"],
-            cwd=repo,
-        )
-        last_commit = _run_cmd(
-            ["git", "log", "-n", "1", "--pretty=format:%aI"],
-            cwd=repo,
-        )
+        url = get_repo_url(repo)
+        created = get_repo_created_date(repo)
+        last_commit = get_repo_last_commit_date(repo)
         conn.execute("""
             INSERT OR REPLACE INTO repos (name, path, url, created_date, last_commit_date, updated_at)
             VALUES (?, ?, ?, ?, ?, ?)

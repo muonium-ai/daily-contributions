@@ -7,6 +7,7 @@ import subprocess
 from datetime import date
 
 from constants import DB_PATH, REPOS_FILE, EMAILS_FILE
+from git_utils import run_cmd, get_repo_url, get_repo_created_date
 
 def read_lines(path):
   with open(path) as f:
@@ -16,24 +17,6 @@ def read_lines(path):
 def get_author_regex():
   emails = read_lines(EMAILS_FILE)
   return "|".join(re.escape(email) for email in emails)
-
-
-def run_cmd(cmd, cwd=None):
-  result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-  if result.returncode != 0:
-    return ""
-  return result.stdout.strip()
-
-
-def get_repo_created_date(repo):
-  return run_cmd(
-    ["git", "log", "--reverse", "-n", "1", "--pretty=format:%ad", "--date=iso-strict"],
-    cwd=repo,
-  )
-
-
-def get_repo_url(repo):
-  return run_cmd(["git", "config", "--get", "remote.origin.url"], cwd=repo)
 
 
 def get_repo_author_stats(repo, author_regex):
